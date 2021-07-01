@@ -1,5 +1,4 @@
 const svg = d3.select('svg')
-let fetchedData;
 
 const width = +svg.attr('width')
 const height = +svg.attr('height')
@@ -19,6 +18,7 @@ const render = data => {
         .domain(data.map( yValue ))
         .range([0, innerHeight])
         .padding(0.2)
+    const barLength = (d) => xScale(xValue(d)) > 5 ? xScale(xValue(d)) : 5
 
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`)
@@ -35,15 +35,26 @@ const render = data => {
     g.selectAll('rect').data(data)
         .enter().append('rect')
         .attr('y', d => yScale( yValue(d) ))
-        .attr('width', d => xScale(xValue(d)) > 5 ? xScale(xValue(d)) : 5)
+        .attr('width', d => barLength(d))
         .attr('height', yScale.bandwidth())
+
+    update();
+
+    function update() {
+        g.selectAll('rect')
+            .attr('width', 0)
+            .transition()
+            .duration(1000)
+            .delay((d, i) => {
+                console.log(d)
+                return i * 100
+            })
+            .attr('width', d => barLength(d))
+    }
 }
+
 //API KEY: 5b280bcc41027e39c1c39ec27ad9360061c86164
-// fetch("https://api.nomics.com/v1/currencies/sparkline?key=5b280bcc41027e39c1c39ec27ad9360061c86164&ids=BTC,ETH,XRP&start=2018-04-14T00%3A00%3A00Z&end=2018-05-14T00%3A00%3A00Z")
-//     .then(response => response.json())
-//     .then(data => {
-//         render(data)
-//     })
+
 fetch("https://api.nomics.com/v1/currencies/ticker?key=5b280bcc41027e39c1c39ec27ad9360061c86164&ids=ETH,BCH,XRP,LTC,XMR,ETC,USDT&interval=1d,7d,30d&convert=EUR&per-page=100&page=1")
     .then(response => response.json())
     .then(data => {
